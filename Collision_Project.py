@@ -149,7 +149,8 @@ class Box:
         pygame.draw.rect(self.display, self.color, [self.x, self.y, self.width, self.height], width=0)
 
     def draw_triangle(self):
-        pygame.draw.polygon(self.display, WHITE, ())
+        pygame.draw.polygon(self.display, WHITE, [(self.x + 2, self.y), (self.x + self.width, self.y + self.height),
+                                                  (self.x, self.y + self.height)], 0)
 
     def update(self):
         self.y += self.y_speed
@@ -197,13 +198,16 @@ class Score:
 
 
 class EndScreen:
-    def __init__(self, display, x, y):
+    def __init__(self, display, x, y, color):
         self.display = display
         self.x = x
         self.y = y
+        self.color = color
 
     def game_end(self):
-        pass
+        end_text = FONT.render(f'You caught 100 fish in {int(time_count)} seconds, good job!', True, WHITE)
+        self.display.fill(self.color)
+        self.display.blit(end_text, [self.x, self.y])
 
 
 person = Person(100, 300, PEACH)
@@ -218,10 +222,12 @@ enemy_width = 20
 enemy_list = []
 counter = 0
 time_count = 0
+end = EndScreen(screen, 130, 240, OCEAN_BLUE)
+at_end = False
 for i in range(15):
     y_coord = random.randrange(250, SCREEN_HEIGHT, 15)
     random_x = random.randrange(700, 900, 5)
-    enemy_list.append(Box(screen, random_x, y_coord, enemy_width, enemy_width, RED))
+    enemy_list.append(Box(screen, random_x, y_coord, enemy_width, enemy_width, OCEAN_BLUE))
 while running:
     # Get all input events (Keyboard, Mouse, Joystick, etc
     time_count += (1/60)
@@ -268,16 +274,26 @@ while running:
     person.draw_person_on_raft()
     for enemy in enemy_list:
         enemy.draw_box()
+        enemy.draw_triangle()
         enemy.move_box()
         if player.is_collided(enemy):
             counter += 1
     fish_caught.draw_score(counter)
     fish_caught.draw_timer()
+    if counter >= 100:
+        end.game_end()
+        pygame.display.flip()
+        at_end = True
+        running = False
 
     pygame.display.flip()
 
     clock.tick(FPS)
 
+if at_end:
+    end_clock = 0
+    while end_clock < 10000:
+        end_clock += 0.0005
 
 # Runs when main game loop ends
 pygame.quit()
